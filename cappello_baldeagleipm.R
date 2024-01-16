@@ -3,13 +3,16 @@
 
 # Code provided for peer review and is subject to change
 
-# version: v17.1.3
+# version: v17.2.0
 # code author: Caroline D. Cappello
-# last updated: June 2023
+# last updated: Nov 2023
+
+
+
 
 model <- nimbleCode({
   
-  #### * Mark-resight-recovery * ###############################################
+  #### * Mark-resight-recovery submodel * ###############################################
   
   # ------------------------------------------------.-
   # Parameters:
@@ -24,8 +27,8 @@ model <- nimbleCode({
   # pAb: resight probability AY3 breeder
   # psiFB: transition probability from floater to breeder (i.e. recruitment)
   # psiBF: transition probability from breeder to floater (i.e. end tenure)
-  # psiGPS: transition probability, Y3 to YAf with GPS (only once instance of a previously tagged bird gaining a tag)
-  # psiFAIL: transition probability from telemetered to non-telemetered (i.e. tag failure)
+  # tauGPS: transition probability, Y3 to YAf with GPS (only once instance of a previously tagged bird gaining a tag)
+  # tauFAIL: transition probability from telemetered to non-telemetered (i.e. tag failure)
   # rBAND: probability of dead recovery of banded individual
   # rGPS: probability of dead recovery of telemetered individual
   
@@ -79,8 +82,8 @@ model <- nimbleCode({
   
   psiFB ~ dunif(0, 1)
   psiBF ~ dunif(0, 1)
-  psiGPS ~ dunif(0, 1)
-  psiFAIL ~ dunif(0, 1)
+  tauGPS ~ dunif(0, 1)
+  tauFAIL ~ dunif(0, 1)
   
   rBAND ~ dunif(0, 1)
   rGPS ~ dunif(0, 1)
@@ -187,14 +190,14 @@ model <- nimbleCode({
       gamma[3,1,i,t] <- 0                                         # Pr(Y3 -> Y1)
       gamma[3,2,i,t] <- 0                                         # Pr(Y3 -> Y2)
       gamma[3,3,i,t] <- 0                                         # Pr(Y3 -> Y3)
-      gamma[3,4,i,t] <- phi3[i,t] * (1-psiFB) * (1-psiGPS)        # Pr(Y3 -> Adult floater)
+      gamma[3,4,i,t] <- phi3[i,t] * (1-psiFB) * (1-tauGPS)        # Pr(Y3 -> Adult floater)
       gamma[3,5,i,t] <- phi3[i,t] * psiFB                         # Pr(Y3 -> Adult breeder)
       gamma[3,6,i,t] <- (1-phi3[i,t]) * rBAND                     # Pr(Y3 -> Recently dead)
       gamma[3,7,i,t] <- (1-phi3[i,t]) * (1-rBAND)                 # Pr(Y3 -> Dead)
       gamma[3,8,i,t] <- 0                                         # Pr(Y3 -> Y1 GPS)
       gamma[3,9,i,t] <- 0                                         # Pr(Y3 -> Y2 GPS)
       gamma[3,10,i,t] <- 0                                        # Pr(Y3 -> Y3 GPS)
-      gamma[3,11,i,t] <- phi3[i,t] * (1-psiFB) * psiGPS           # Pr(Y3 -> Adult floater GPS)
+      gamma[3,11,i,t] <- phi3[i,t] * (1-psiFB) * tauGPS           # Pr(Y3 -> Adult floater GPS)
       gamma[3,12,i,t] <- 0                                        # Pr(Y3 -> Adult breeder GPS)
       gamma[3,13,i,t] <- 0                                        # Pr(Y3 -> Recently dead GPS)
       gamma[3,14,i,t] <- 0                                        # Pr(Y3 -> Long dead GPS)
@@ -260,79 +263,79 @@ model <- nimbleCode({
       gamma[7,14,i,t] <- 0                                        # Pr(Long dead -> Long dead GPS)
       
       gamma[8,1,i,t] <- 0                                         # Pr(Y1 GPS alive at time t+1 -> Y1 at time t)
-      gamma[8,2,i,t] <- phi1[i,t] * psiFAIL                       # Pr(Y1 GPS -> Y2)
+      gamma[8,2,i,t] <- phi1[i,t] * tauFAIL                       # Pr(Y1 GPS -> Y2)
       gamma[8,3,i,t] <- 0                                         # Pr(Y1 GPS -> Y3)
       gamma[8,4,i,t] <- 0                                         # Pr(Y1 GPS -> Adult floater)
       gamma[8,5,i,t] <- 0                                         # Pr(Y1 GPS -> Adult breeder)
-      gamma[8,6,i,t] <- (1-phi1[i,t]) * rBAND * psiFAIL           # Pr(Y1 GPS -> Recently dead)
-      gamma[8,7,i,t] <- (1-phi1[i,t]) * (1-rBAND) * psiFAIL       # Pr(Y1 GPS -> Dead)
+      gamma[8,6,i,t] <- (1-phi1[i,t]) * rBAND * tauFAIL           # Pr(Y1 GPS -> Recently dead)
+      gamma[8,7,i,t] <- (1-phi1[i,t]) * (1-rBAND) * tauFAIL       # Pr(Y1 GPS -> Dead)
       gamma[8,8,i,t] <- 0                                         # Pr(Y1 GPS -> Y1 GPS)
-      gamma[8,9,i,t] <- phi1[i,t] * (1-psiFAIL)                   # Pr(Y1 GPS -> Y2 GPS)
+      gamma[8,9,i,t] <- phi1[i,t] * (1-tauFAIL)                   # Pr(Y1 GPS -> Y2 GPS)
       gamma[8,10,i,t] <- 0                                        # Pr(Y1 GPS -> Y3 GPS)
       gamma[8,11,i,t] <- 0                                        # Pr(Y1 GPS -> Adult floater GPS)
       gamma[8,12,i,t] <- 0                                        # Pr(Y1 GPS -> Adult breeder GPS)
-      gamma[8,13,i,t] <- (1-phi1[i,t]) * rGPS * (1-psiFAIL)       # Pr(Y1 GPS -> Recently dead GPS)
-      gamma[8,14,i,t] <- (1-phi1[i,t]) * (1-rGPS) * (1-psiFAIL)   # Pr(Y1 GPS -> Long dead GPS)
+      gamma[8,13,i,t] <- (1-phi1[i,t]) * rGPS * (1-tauFAIL)       # Pr(Y1 GPS -> Recently dead GPS)
+      gamma[8,14,i,t] <- (1-phi1[i,t]) * (1-rGPS) * (1-tauFAIL)   # Pr(Y1 GPS -> Long dead GPS)
       
       gamma[9,1,i,t] <- 0                                         # Pr(Y2 GPS -> Y1)
       gamma[9,2,i,t] <- 0                                         # Pr(Y2 GPS -> Y2)
-      gamma[9,3,i,t] <- phi2[i,t] * psiFAIL                       # Pr(Y2 GPS -> Y3)
+      gamma[9,3,i,t] <- phi2[i,t] * tauFAIL                       # Pr(Y2 GPS -> Y3)
       gamma[9,4,i,t] <- 0                                         # Pr(Y2 GPS -> Adult floater)
       gamma[9,5,i,t] <- 0                                         # Pr(Y2 GPS -> Adult breeder)
-      gamma[9,6,i,t] <- (1-phi2[i,t]) * rBAND * psiFAIL           # Pr(Y2 GPS -> Recently dead)
-      gamma[9,7,i,t] <- (1-phi2[i,t]) * (1-rBAND) * psiFAIL       # Pr(Y2 GPS -> Dead)
+      gamma[9,6,i,t] <- (1-phi2[i,t]) * rBAND * tauFAIL           # Pr(Y2 GPS -> Recently dead)
+      gamma[9,7,i,t] <- (1-phi2[i,t]) * (1-rBAND) * tauFAIL       # Pr(Y2 GPS -> Dead)
       gamma[9,8,i,t] <- 0                                         # Pr(Y2 GPS -> Y1 GPS)
       gamma[9,9,i,t] <- 0                                         # Pr(Y2 GPS -> Y2 GPS)
-      gamma[9,10,i,t] <- phi2[i,t] * (1-psiFAIL)                  # Pr(Y2 GPS -> Y3 GPS)
+      gamma[9,10,i,t] <- phi2[i,t] * (1-tauFAIL)                  # Pr(Y2 GPS -> Y3 GPS)
       gamma[9,11,i,t] <- 0                                        # Pr(Y2 GPS -> Adult floater GPS)
       gamma[9,12,i,t] <- 0                                        # Pr(Y2 GPS -> Adult breeder GPS)
-      gamma[9,13,i,t] <- (1-phi2[i,t]) * rGPS * (1-psiFAIL)       # Pr(Y2 GPS -> Recently dead GPS)
-      gamma[9,14,i,t] <- (1-phi2[i,t]) * (1-rGPS) * (1-psiFAIL)   # Pr(Y2 GPS -> Long dead GPS)
+      gamma[9,13,i,t] <- (1-phi2[i,t]) * rGPS * (1-tauFAIL)       # Pr(Y2 GPS -> Recently dead GPS)
+      gamma[9,14,i,t] <- (1-phi2[i,t]) * (1-rGPS) * (1-tauFAIL)   # Pr(Y2 GPS -> Long dead GPS)
       
       gamma[10,1,i,t] <- 0                                        # Pr(Y3 GPS -> Y1)
       gamma[10,2,i,t] <- 0                                        # Pr(Y3 GPS -> Y2)
       gamma[10,3,i,t] <- 0                                        # Pr(Y3 GPS -> Y3)
-      gamma[10,4,i,t] <- phi3[i,t] * (1-psiFB) * psiFAIL          # Pr(Y3 GPS -> Adult floater)
-      gamma[10,5,i,t] <- phi3[i,t] * psiFB * psiFAIL              # Pr(Y3 GPS -> Adult breeder)
-      gamma[10,6,i,t] <- (1-phi3[i,t]) * rBAND * psiFAIL          # Pr(Y3 GPS -> Recently dead)
-      gamma[10,7,i,t] <- (1-phi3[i,t]) * (1-rBAND) * psiFAIL      # Pr(Y3 GPS -> Dead)
+      gamma[10,4,i,t] <- phi3[i,t] * (1-psiFB) * tauFAIL          # Pr(Y3 GPS -> Adult floater)
+      gamma[10,5,i,t] <- phi3[i,t] * psiFB * tauFAIL              # Pr(Y3 GPS -> Adult breeder)
+      gamma[10,6,i,t] <- (1-phi3[i,t]) * rBAND * tauFAIL          # Pr(Y3 GPS -> Recently dead)
+      gamma[10,7,i,t] <- (1-phi3[i,t]) * (1-rBAND) * tauFAIL      # Pr(Y3 GPS -> Dead)
       gamma[10,8,i,t] <-  0                                       # Pr(Y3 GPS -> Y1 GPS)
       gamma[10,9,i,t] <-  0                                       # Pr(Y3 GPS -> Y2 GPS)
       gamma[10,10,i,t] <- 0                                       # Pr(Y3 GPS -> Y3 GPS)
-      gamma[10,11,i,t] <- phi3[i,t] * (1-psiFB) * (1-psiFAIL)     # Pr(Y3 GPS -> Adult floater GPS)
-      gamma[10,12,i,t] <- phi3[i,t] * psiFB * (1-psiFAIL)         # Pr(Y3 GPS -> Adult breeder GPS)
-      gamma[10,13,i,t] <- (1-phi3[i,t]) * rGPS * (1-psiFAIL)      # Pr(Y3 GPS -> Recently dead GPS)
-      gamma[10,14,i,t] <- (1-phi3[i,t]) * (1-rGPS) * (1-psiFAIL)  # Pr(Y3 GPS -> Long dead GPS)
+      gamma[10,11,i,t] <- phi3[i,t] * (1-psiFB) * (1-tauFAIL)     # Pr(Y3 GPS -> Adult floater GPS)
+      gamma[10,12,i,t] <- phi3[i,t] * psiFB * (1-tauFAIL)         # Pr(Y3 GPS -> Adult breeder GPS)
+      gamma[10,13,i,t] <- (1-phi3[i,t]) * rGPS * (1-tauFAIL)      # Pr(Y3 GPS -> Recently dead GPS)
+      gamma[10,14,i,t] <- (1-phi3[i,t]) * (1-rGPS) * (1-tauFAIL)  # Pr(Y3 GPS -> Long dead GPS)
       
       gamma[11,1,i,t] <- 0                                        # Pr(Adult floater GPS -> Y1)
       gamma[11,2,i,t] <- 0                                        # Pr(Adult floater GPS -> Y2)
       gamma[11,3,i,t] <- 0                                        # Pr(Adult floater GPS -> Y3)
-      gamma[11,4,i,t] <- phiAf[i,t] * (1-psiFB) * psiFAIL         # Pr(Adult floater GPS -> Adult floater)
-      gamma[11,5,i,t] <- phiAf[i,t] * psiFB * psiFAIL             # Pr(Adult floater GPS -> Adult breeder)
-      gamma[11,6,i,t] <- (1-phiAf[i,t]) * rBAND * psiFAIL         # Pr(Adult floater GPS -> Recently dead)
-      gamma[11,7,i,t] <- (1-phiAf[i,t]) * (1-rBAND) * psiFAIL     # Pr(Adult floater GPS -> Dead)
+      gamma[11,4,i,t] <- phiAf[i,t] * (1-psiFB) * tauFAIL         # Pr(Adult floater GPS -> Adult floater)
+      gamma[11,5,i,t] <- phiAf[i,t] * psiFB * tauFAIL             # Pr(Adult floater GPS -> Adult breeder)
+      gamma[11,6,i,t] <- (1-phiAf[i,t]) * rBAND * tauFAIL         # Pr(Adult floater GPS -> Recently dead)
+      gamma[11,7,i,t] <- (1-phiAf[i,t]) * (1-rBAND) * tauFAIL     # Pr(Adult floater GPS -> Dead)
       gamma[11,8,i,t] <-  0                                       # Pr(Adult floater GPS -> Y1 GPS)
       gamma[11,9,i,t] <-  0                                       # Pr(Adult floater GPS -> Y2 GPS)
       gamma[11,10,i,t] <- 0                                       # Pr(Adult floater GPS -> Y3 GPS)
-      gamma[11,11,i,t] <- phiAf[i,t] * (1-psiFB) * (1-psiFAIL)    # Pr(Adult floater GPS -> Adult floater GPS)
-      gamma[11,12,i,t] <- phiAf[i,t] * psiFB * (1-psiFAIL)        # Pr(Adult floater GPS -> Adult breeder GPS)
-      gamma[11,13,i,t] <- (1-phiAf[i,t]) * rGPS * (1-psiFAIL)     # Pr(Adult floater GPS -> Recently dead GPS)
-      gamma[11,14,i,t] <- (1-phiAf[i,t]) * (1-rGPS) * (1-psiFAIL) # Pr(Adult floater GPS -> Long dead GPS)
+      gamma[11,11,i,t] <- phiAf[i,t] * (1-psiFB) * (1-tauFAIL)    # Pr(Adult floater GPS -> Adult floater GPS)
+      gamma[11,12,i,t] <- phiAf[i,t] * psiFB * (1-tauFAIL)        # Pr(Adult floater GPS -> Adult breeder GPS)
+      gamma[11,13,i,t] <- (1-phiAf[i,t]) * rGPS * (1-tauFAIL)     # Pr(Adult floater GPS -> Recently dead GPS)
+      gamma[11,14,i,t] <- (1-phiAf[i,t]) * (1-rGPS) * (1-tauFAIL) # Pr(Adult floater GPS -> Long dead GPS)
       
       gamma[12,1,i,t] <- 0                                        # Pr(Adult breeder GPS -> Y1)
       gamma[12,2,i,t] <- 0                                        # Pr(Adult breeder GPS -> Y2)
       gamma[12,3,i,t] <- 0                                        # Pr(Adult breeder GPS -> Y3)
-      gamma[12,4,i,t] <- phiAb[i,t] * psiBF * psiFAIL             # Pr(Adult breeder GPS -> Adult floater)
-      gamma[12,5,i,t] <- phiAb[i,t] * (1-psiBF) * psiFAIL         # Pr(Adult breeder GPS -> Adult breeder)
-      gamma[12,6,i,t] <- (1-phiAb[i,t]) * rBAND * psiFAIL         # Pr(Adult breeder GPS -> Recently dead)
-      gamma[12,7,i,t] <- (1-phiAb[i,t]) * (1-rBAND) * psiFAIL     # Pr(Adult breeder GPS -> Dead)
-      gamma[12,8,i,t] <-  0                                       # Pr(Adult floater GPS -> Y1 GPS)
-      gamma[12,9,i,t] <-  0                                       # Pr(Adult floater GPS -> Y2 GPS)
-      gamma[12,10,i,t] <- 0                                       # Pr(Adult floater GPS -> Y3 GPS)
-      gamma[12,11,i,t] <- phiAb[i,t] * (1-psiFB) * (1-psiFAIL)    # Pr(Adult floater GPS -> Adult floater GPS)
-      gamma[12,12,i,t] <- phiAb[i,t] * psiFB * (1-psiFAIL)        # Pr(Adult floater GPS -> Adult breeder GPS)
-      gamma[12,13,i,t] <- (1-phiAb[i,t]) * rGPS * (1-psiFAIL)     # Pr(Adult floater GPS -> Recently dead GPS)
-      gamma[12,14,i,t] <- (1-phiAb[i,t]) * (1-rGPS) * (1-psiFAIL) # Pr(Adult floater GPS -> Long dead GPS)
+      gamma[12,4,i,t] <- phiAb[i,t] * psiBF * tauFAIL             # Pr(Adult breeder GPS -> Adult floater)
+      gamma[12,5,i,t] <- phiAb[i,t] * (1-psiBF) * tauFAIL         # Pr(Adult breeder GPS -> Adult breeder)
+      gamma[12,6,i,t] <- (1-phiAb[i,t]) * rBAND * tauFAIL         # Pr(Adult breeder GPS -> Recently dead)
+      gamma[12,7,i,t] <- (1-phiAb[i,t]) * (1-rBAND) * tauFAIL     # Pr(Adult breeder GPS -> Dead)
+      gamma[12,8,i,t] <-  0                                       # Pr(Adult breeder GPS -> Juv GPS)
+      gamma[12,9,i,t] <-  0                                       # Pr(Adult breeder GPS -> Y2 GPS)
+      gamma[12,10,i,t] <- 0                                       # Pr(Adult breeder GPS -> Y3 GPS)
+      gamma[12,11,i,t] <- phiAb[i,t] * psiBF * (1-tauFAIL)        # Pr(Adult breeder GPS -> Adult floater GPS)
+      gamma[12,12,i,t] <- phiAb[i,t] * (1-psiBF) * (1-tauFAIL)    # Pr(Adult breeder GPS -> Adult breeder GPS)
+      gamma[12,13,i,t] <- (1-phiAb[i,t]) * rGPS * (1-tauFAIL)     # Pr(Adult breeder GPS -> Recently dead GPS)
+      gamma[12,14,i,t] <- (1-phiAb[i,t]) * (1-rGPS) * (1-tauFAIL) # Pr(Adult breeder GPS -> Long dead GPSv
       
       gamma[13,1,i,t] <- 0                                        # Pr(Recently dead GPS -> Y1)
       gamma[13,2,i,t] <- 0                                        # Pr(Recently dead GPS -> Y2)
@@ -569,7 +572,7 @@ model <- nimbleCode({
     omega[14,13,t] <- 0        # Pr(long dead GPS t -> detected dead GPS t)
   }
   
-  # likelihood 
+  # > mrr likelihood ----------
   for (i in 1:nind){
     # latent state at first capture
     z[i,first[i]]  <- first_state[i]
@@ -584,7 +587,7 @@ model <- nimbleCode({
   
   
   
-  #### * State-space model * ########################################################
+  #### * State-space submodel * ########################################################
   
   # Priors on process model
   N1start ~ dunif(1,20) # number of Y1
@@ -708,7 +711,7 @@ model <- nimbleCode({
   
   ### Fec change scenarios (not linked to a particular mgmt action)
   
-  ## Scenario 5: reduce fec 7%
+  ## Scenario 5: increase fec 10%
   
   # past
   for (t in 1:(nyears)){
@@ -724,7 +727,7 @@ model <- nimbleCode({
   }
   # future
   for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,5] ~ dpois((N[7,t+1,5]+N[8,t+1,5]+N[9,t+1,5]) * (mean_fec_t[t+1] * 0.93 / sex_ratio))  # number of juveniles (flg to Y2)
+    N[1,t+1,5] ~ dpois((N[7,t+1,5]+N[8,t+1,5]+N[9,t+1,5]) * (mean_fec_t[t+1] * 1.10 / sex_ratio))  # number of juveniles (flg to Y2)
     N[2,t+1,5] ~ dbin(phi1_f_t[t+6], N[1,t,5])                                # number of Y2 (last year's chicks)
     N[3,t+1,5] ~ dbin(phi2_f_t[t+6], N[2,t,5])                                # number of Y3 (can't breed yet)
     N[4,t+1,5] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,5])                      # number of floaters: previously Y3
@@ -735,7 +738,7 @@ model <- nimbleCode({
     N[9,t+1,5] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,5]+N[8,t,5]+N[9,t,5])) # number of breeders: previously breeders
   } #t
   
-  ## Scenario 6: reduce fec 8%
+  ## Scenario 6: increase fec 5%
   
   # past
   for (t in 1:(nyears)){
@@ -751,7 +754,7 @@ model <- nimbleCode({
   }
   # future
   for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,6] ~ dpois((N[7,t+1,6]+N[8,t+1,6]+N[9,t+1,6]) * (mean_fec_t[t+1] * 0.92 / sex_ratio))  # number of juveniles (flg to Y2)
+    N[1,t+1,6] ~ dpois((N[7,t+1,6]+N[8,t+1,6]+N[9,t+1,6]) * (mean_fec_t[t+1] * 1.05 / sex_ratio))  # number of juveniles (flg to Y2)
     N[2,t+1,6] ~ dbin(phi1_f_t[t+6], N[1,t,6])                                # number of Y2 (last year's chicks)
     N[3,t+1,6] ~ dbin(phi2_f_t[t+6], N[2,t,6])                                # number of Y3 (can't breed yet)
     N[4,t+1,6] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,6])                      # number of floaters: previously Y3
@@ -762,7 +765,7 @@ model <- nimbleCode({
     N[9,t+1,6] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,6]+N[8,t,6]+N[9,t,6])) # number of breeders: previously breeders
   } #t
   
-  ## Scenario 7: reduce fec 9%
+  ## Scenario 7: reduce fec 5%
   
   # past
   for (t in 1:(nyears)){
@@ -778,7 +781,7 @@ model <- nimbleCode({
   }
   # # future
   for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,7] ~ dpois((N[7,t+1,7]+N[8,t+1,7]+N[9,t+1,7]) * (mean_fec_t[t+1] * 0.91 / sex_ratio))  # number of juveniles (flg to Y2)
+    N[1,t+1,7] ~ dpois((N[7,t+1,7]+N[8,t+1,7]+N[9,t+1,7]) * (mean_fec_t[t+1] * 0.95 / sex_ratio))  # number of juveniles (flg to Y2)
     N[2,t+1,7] ~ dbin(phi1_f_t[t+6], N[1,t,7])                                # number of Y2 (last year's chicks)
     N[3,t+1,7] ~ dbin(phi2_f_t[t+6], N[2,t,7])                                # number of Y3 (can't breed yet)
     N[4,t+1,7] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,7])                      # number of floaters: previously Y3
@@ -816,7 +819,7 @@ model <- nimbleCode({
     N[9,t+1,8] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,8]+N[8,t,8]+N[9,t,8])) # number of breeders: previously breeders
   } #t
   
-  ## Scenario 9: reduce fec 11%
+  ## Scenario 9: reduce fec 15%
   
   # past
   for (t in 1:(nyears)){
@@ -832,7 +835,7 @@ model <- nimbleCode({
   }
   # future
   for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,9] ~ dpois((N[7,t+1,9]+N[8,t+1,9]+N[9,t+1,9]) * (mean_fec_t[t+1] * 0.89 / sex_ratio))  # number of juveniles (flg to Y2)
+    N[1,t+1,9] ~ dpois((N[7,t+1,9]+N[8,t+1,9]+N[9,t+1,9]) * (mean_fec_t[t+1] * 0.85 / sex_ratio))  # number of juveniles (flg to Y2)
     N[2,t+1,9] ~ dbin(phi1_f_t[t+6], N[1,t,9])                                # number of Y2 (last year's chicks)
     N[3,t+1,9] ~ dbin(phi2_f_t[t+6], N[2,t,9])                                # number of Y3 (can't breed yet)
     N[4,t+1,9] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,9])                      # number of floaters: previously Y3
@@ -844,125 +847,18 @@ model <- nimbleCode({
   } #t
   
   
-  ## Scenario 10: reduce fec 12%
   
-  # past
-  for (t in 1:(nyears)){
-    N[1,t,10] <- N[1,t,1]
-    N[2,t,10] <- N[2,t,1]
-    N[3,t,10] <- N[3,t,1]
-    N[4,t,10] <- N[4,t,1]
-    N[5,t,10] <- N[5,t,1]
-    N[6,t,10] <- N[6,t,1]
-    N[7,t,10] <- N[7,t,1]
-    N[8,t,10] <- N[8,t,1]
-    N[9,t,10] <- N[9,t,1]
-  }
-  # future
-  for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,10] ~ dpois((N[7,t+1,10]+N[8,t+1,10]+N[9,t+1,10]) * (mean_fec_t[t+1] * 0.88 / sex_ratio))  # number of juveniles (flg to Y2)
-    N[2,t+1,10] ~ dbin(phi1_f_t[t+6], N[1,t,10])                                  # number of Y2 (last year's chicks)
-    N[3,t+1,10] ~ dbin(phi2_f_t[t+6], N[2,t,10])                                  # number of Y3 (can't breed yet)
-    N[4,t+1,10] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,10])                        # number of floaters: previously Y3
-    N[5,t+1,10] ~ dbin(phiAf_f_t[t+6]*(1-psiFB), (N[4,t,10]+N[5,t,10]+N[6,t,10])) # number of floaters: previously floaters
-    N[6,t+1,10] ~ dbin(phiAb_f_t[t+6]*psiBF, (N[7,t,10]+N[8,t,10]+N[9,t,10]))     # number of floaters: previously breeders
-    N[7,t+1,10] ~ dbin(phi3_f_t[t+6]*psiFB, N[3,t,10])                            # number of breeders: previously Y3
-    N[8,t+1,10] ~ dbin(phiAf_f_t[t+6]*psiFB, (N[4,t,10]+N[5,t,10]+N[6,t,10]))     # number of breeders: previously floaters
-    N[9,t+1,10] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,10]+N[8,t,10]+N[9,t,10])) # number of breeders: previously breeders
-  } #t
-  
-  ## Scenario 11: reduce fec 13%
-  
-  # past
-  for (t in 1:(nyears)){
-    N[1,t,11] <- N[1,t,1]
-    N[2,t,11] <- N[2,t,1]
-    N[3,t,11] <- N[3,t,1]
-    N[4,t,11] <- N[4,t,1]
-    N[5,t,11] <- N[5,t,1]
-    N[6,t,11] <- N[6,t,1]
-    N[7,t,11] <- N[7,t,1]
-    N[8,t,11] <- N[8,t,1]
-    N[9,t,11] <- N[9,t,1]
-  }
-  # future
-  for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,11] ~ dpois((N[7,t+1,11]+N[8,t+1,11]+N[9,t+1,11]) * (mean_fec_t[t+1] * 0.87 / sex_ratio))  # number of juveniles (flg to Y2)
-    N[2,t+1,11] ~ dbin(phi1_f_t[t+6], N[1,t,11])                                  # number of Y2 (last year's chicks)
-    N[3,t+1,11] ~ dbin(phi2_f_t[t+6], N[2,t,11])                                  # number of Y3 (can't breed yet)
-    N[4,t+1,11] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,11])                        # number of floaters: previously Y3
-    N[5,t+1,11] ~ dbin(phiAf_f_t[t+6]*(1-psiFB), (N[4,t,11]+N[5,t,11]+N[6,t,11])) # number of floaters: previously floaters
-    N[6,t+1,11] ~ dbin(phiAb_f_t[t+6]*psiBF, (N[7,t,11]+N[8,t,11]+N[9,t,11]))     # number of floaters: previously breeders
-    N[7,t+1,11] ~ dbin(phi3_f_t[t+6]*psiFB, N[3,t,11])                            # number of breeders: previously Y3
-    N[8,t+1,11] ~ dbin(phiAf_f_t[t+6]*psiFB, (N[4,t,11]+N[5,t,11]+N[6,t,11]))     # number of breeders: previously floaters
-    N[9,t+1,11] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,11]+N[8,t,11]+N[9,t,11])) # number of breeders: previously breeders
-  } #t
-  
-  ## Scenario 12: reduce fec 14%
-  
-  # past
-  for (t in 1:(nyears)){
-    N[1,t,12] <- N[1,t,1]
-    N[2,t,12] <- N[2,t,1]
-    N[3,t,12] <- N[3,t,1]
-    N[4,t,12] <- N[4,t,1]
-    N[5,t,12] <- N[5,t,1]
-    N[6,t,12] <- N[6,t,1]
-    N[7,t,12] <- N[7,t,1]
-    N[8,t,12] <- N[8,t,1]
-    N[9,t,12] <- N[9,t,1]
-  }
-  # future
-  for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,12] ~ dpois((N[7,t+1,12]+N[8,t+1,12]+N[9,t+1,12]) * (mean_fec_t[t+1] * 0.86 / sex_ratio))  # number of juveniles (flg to Y2)
-    N[2,t+1,12] ~ dbin(phi1_f_t[t+6], N[1,t,12])                                  # number of Y2 (last year's chicks)
-    N[3,t+1,12] ~ dbin(phi2_f_t[t+6], N[2,t,12])                                  # number of Y3 (can't breed yet)
-    N[4,t+1,12] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,12])                        # number of floaters: previously Y3
-    N[5,t+1,12] ~ dbin(phiAf_f_t[t+6]*(1-psiFB), (N[4,t,12]+N[5,t,12]+N[6,t,12])) # number of floaters: previously floaters
-    N[6,t+1,12] ~ dbin(phiAb_f_t[t+6]*psiBF, (N[7,t,12]+N[8,t,12]+N[9,t,12]))     # number of floaters: previously breeders
-    N[7,t+1,12] ~ dbin(phi3_f_t[t+6]*psiFB, N[3,t,12])                            # number of breeders: previously Y3
-    N[8,t+1,12] ~ dbin(phiAf_f_t[t+6]*psiFB, (N[4,t,12]+N[5,t,12]+N[6,t,12]))     # number of breeders: previously floaters
-    N[9,t+1,12] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,12]+N[8,t,12]+N[9,t,12])) # number of breeders: previously breeders
-  } #t
-  
-  ## Scenario 13: reduce fec 15%
-  
-  # past
-  for (t in 1:(nyears)){
-    N[1,t,13] <- N[1,t,1]
-    N[2,t,13] <- N[2,t,1]
-    N[3,t,13] <- N[3,t,1]
-    N[4,t,13] <- N[4,t,1]
-    N[5,t,13] <- N[5,t,1]
-    N[6,t,13] <- N[6,t,1]
-    N[7,t,13] <- N[7,t,1]
-    N[8,t,13] <- N[8,t,1]
-    N[9,t,13] <- N[9,t,1]
-  }
-  # future
-  for (t in nyears:(nyears-1+nyears_proj)){
-    N[1,t+1,13] ~ dpois((N[7,t+1,13]+N[8,t+1,13]+N[9,t+1,13]) * (mean_fec_t[t+1] * 0.85 / sex_ratio))  # number of juveniles (flg to Y2)
-    N[2,t+1,13] ~ dbin(phi1_f_t[t+6], N[1,t,13])                                  # number of Y2 (last year's chicks)
-    N[3,t+1,13] ~ dbin(phi2_f_t[t+6], N[2,t,13])                                  # number of Y3 (can't breed yet)
-    N[4,t+1,13] ~ dbin(phi3_f_t[t+6]*(1-psiFB), N[3,t,13])                        # number of floaters: previously Y3
-    N[5,t+1,13] ~ dbin(phiAf_f_t[t+6]*(1-psiFB), (N[4,t,13]+N[5,t,13]+N[6,t,13])) # number of floaters: previously floaters
-    N[6,t+1,13] ~ dbin(phiAb_f_t[t+6]*psiBF, (N[7,t,13]+N[8,t,13]+N[9,t,13]))     # number of floaters: previously breeders
-    N[7,t+1,13] ~ dbin(phi3_f_t[t+6]*psiFB, N[3,t,13])                            # number of breeders: previously Y3
-    N[8,t+1,13] ~ dbin(phiAf_f_t[t+6]*psiFB, (N[4,t,13]+N[5,t,13]+N[6,t,13]))     # number of breeders: previously floaters
-    N[9,t+1,13] ~ dbin(phiAb_f_t[t+6]*(1-psiBF), (N[7,t,13]+N[8,t,13]+N[9,t,13])) # number of breeders: previously breeders
-  } #t
-  
-  # Observation model
+  # > observation prior & likelihood -----
   
   # Prior
   sd_occ ~ dunif(0,5) 
   
   for (t in 1:nyears){  
-    num_occ_OBS[t] ~ T(dnorm(N[7,t,1] + N[8,t,1] + N[9,t,1], sd = sd_occ), 0, )
+    OBS_abun[t] ~ T(dnorm(N[7,t,1] + N[8,t,1] + N[9,t,1], sd = sd_occ), 0, )
   }
   
   
-  #### * Nest productivity * ###################################################
+  #### * Nest productivity submodel * ###################################################
   
   # Priors 
   rho[1] ~ dnorm(mean = 0, sd = 3) # intercept
@@ -988,7 +884,7 @@ model <- nimbleCode({
   } #i
   
   
-  # Likelihood
+  # > prod likelihood -----
   for (i in 1:nbrood){
     OBS_nestlings[i] ~ dpois(fec[i]) 
   }
@@ -1027,7 +923,8 @@ model <- nimbleCode({
       n_breeders[j,t] <- (N[7,t,j] + N[8,t,j]+ N[9,t,j])
     } #t
   } #j
-  
+
+    
   # Number of floaters
   for (j in 1:scenarios){
     for (t in 1:(nyears+nyears_proj)){
@@ -1035,12 +932,6 @@ model <- nimbleCode({
     } #t
   } #j
   
-  # Number of effective breeders (i.e. sexually mature individuals, floaters and breeders)
-  for (j in 1:scenarios){
-    for (t in 1:nyears+nyears_proj){
-      n_eff_breeders[t,j] <- N[4,t,j] + N[5,t,j] + N[6,t,j] + N[7,t,j] + N[8,t,j]+ N[9,t,j]
-    } #t
-  } #j
   
   # Number total
   for (t in 1:nyears+nyears_proj){
@@ -1057,6 +948,7 @@ model <- nimbleCode({
     } #j
   } #t
   
+  # geometric mean of lambda
   for (j in 1:scenarios){
     geomean_lambda[j] <- exp(mean(log(lambda[1:(nyears-1), j])))
     geomean_lambda_proj[j] <- exp(mean(log(lambda[nyears:(nyears+nyears_proj-1), j])))
@@ -1064,4 +956,14 @@ model <- nimbleCode({
   
   
 }) #end
+
+
+# my.data ----------------------------------------------------------------------
+my.data <- list(OBS_nestlings = data_prod$NumFledged,
+                OBS_abun = data_abun$OccupiedNestCount,
+                OBS_mr = as.matrix(dplyr::select(data_mr, -c(EagleID))))
+
+
+
+
 
